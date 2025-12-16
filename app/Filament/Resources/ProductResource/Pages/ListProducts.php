@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\ProductResource\Pages;
 
-use App\Filament\Resources\ProductResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\ProductResource;
+use App\Filament\Resources\ProductBatchResource\Traits\HasParentResource;
 
 class ListProducts extends ListRecords
 {
@@ -16,4 +17,11 @@ class ListProducts extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
+
+    // protected function getHeaderWidgets(): array
+    // {
+    //     return [
+    //         \App\Http\Livewire\CashierOpeningFloat::class, // This will auto-check and pop modal if needed
+    //     ];
+    // }
 }

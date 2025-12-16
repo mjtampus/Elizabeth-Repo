@@ -1,17 +1,82 @@
 <?php
 
+// namespace App\Models;
+
+// use App\Models\ExpenseList;
+// use App\Models\ProductCategories;
+// use App\Models\ProductBatch;
+// use Illuminate\Database\Eloquent\Model;
+// use Illuminate\Database\Eloquent\SoftDeletes;
+// use Illuminate\Database\Eloquent\Relations\HasOne;
+// use Illuminate\Database\Eloquent\Relations\HasMany;
+// use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+// class Product extends Model
+// {
+//     use SoftDeletes;
+
+//     protected $table = 'products';
+
+//     protected $fillable  = [
+//         'name',
+//         'product_batch_id',
+//         'code',
+//         'description',
+//         'image_path',
+//         'category_id',
+//         'unit_price',
+//         'unit',
+//     ];
+
+//     public function product_category() :BelongsTo
+//     {
+//         return $this->belongsTo(ProductCategories::class , 'category_id');
+//     }
+//     public function product_stock():HasOne
+//     {
+//         return $this->hasOne(ProductStock::class, 'product_id');
+//     }
+
+//     protected static function booted()
+//     {
+//         static::creating(function ($product) {
+//             if (empty($product->code)) {
+//                 $prefix = strtoupper(substr($product->name, 0, 3));
+//                 $product->code = $prefix . '-' . str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+//             }
+//         });
+//     }
+
+//     public function expense(): HasMany
+//     {
+//         return $this->hasMany(ExpenseList::class);
+//     }
+
+//     public function batch(): BelongsTo
+//     {
+//         return $this->belongsTo(ProductBatch::class, 'product_batch_id');
+//     }
 namespace App\Models;
 
+use App\Models\ExpenseList;
 use App\Models\ProductCategories;
+use App\Models\ProductBatch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Product extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'products';
 
     protected $fillable  = [
         'name',
+        'product_batch_id',
         'code',
         'description',
         'image_path',
@@ -20,22 +85,39 @@ class Product extends Model
         'unit',
     ];
 
-    public function product_category() :BelongsTo
+    public function product_category() : BelongsTo
     {
         return $this->belongsTo(ProductCategories::class , 'category_id');
     }
-    public function product_stock()
+
+    public function product_stock(): HasOne
     {
         return $this->hasOne(ProductStock::class, 'product_id');
     }
 
+    public function expense(): HasMany
+    {
+        return $this->hasMany(ExpenseList::class);
+    }
+
+    public function batch(): HasMany
+    {
+        return $this->hasMany(ProductBatch::class, 'product_id');
+    }
+
     protected static function booted()
     {
+        // Auto-generate product code
         static::creating(function ($product) {
             if (empty($product->code)) {
                 $prefix = strtoupper(substr($product->name, 0, 3));
                 $product->code = $prefix . '-' . str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
             }
         });
+
+        // // Global scope: only include products whose batch is not expired
+        // static::addGlobalScope('non_expired_batch', function (Builder $builder) {
+        //     $builder->whereHas('batch', fn($q) => $q->where('expiration_date', '>', now()));
+        // });
     }
 }

@@ -17,9 +17,11 @@ return new class extends Migration
             $table->string('code');
             $table->string('description');
             $table->string('image_path');
-            $table->string('category_id')->constrained('product_categories')->cascadeOnDelete();
+            // $table->foreignId('product_batch_id')->nullable()->constrained('product_batches')->cascadeOnDelete();
+            $table->foreignId('category_id')->constrained('product_categories')->cascadeOnDelete();
             $table->integer('unit_price')->default(0);
             $table->string('unit')->default('pcs');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
