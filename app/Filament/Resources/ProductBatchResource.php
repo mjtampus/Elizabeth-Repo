@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Collection;
 use App\Filament\Resources\ProductBatchResource\Pages;
+use Illuminate\Support\Facades\DB;
 
 class ProductBatchResource extends Resource
 {
@@ -90,9 +91,7 @@ class ProductBatchResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                ->label('mark as expired')
-                ->icon('heroicon-o-exclamation-triangle'),
+                Tables\Actions\DeleteAction::make(),
                 Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
@@ -107,7 +106,37 @@ class ProductBatchResource extends Resource
                         ->modalSubmitActionLabel('Yes, Mark as Expired')
                         ->action(function (Collection $records) {
 
-                            \Log::info('hellow');
+                            DB::transaction(function () use ($records) {
+
+                                foreach ($records as $batch) {
+
+
+                                    $productstock = $batch->products->product_stock;
+
+                                    $productcode = $batch->products->code;
+
+                                    $product = $batch->products;
+
+                                    $quantity = $productstock->stock;
+
+
+                                    if ($quantity <= 0) {
+                                        continue;
+                                    }
+
+
+                                    // Create stock movement (OUT)
+                                    $productstock->stockMovements()->create([
+                                        'movement_type' => 'out',
+                                        'quantity' => $quantity,
+                                        'product_code' => $productcode,
+                                        'reason' => 'expired batch: ' . $batch->batch_number
+                                    ]);
+
+                                    // Update product stock
+                                    $product->product_stock()->decrement('stock', $quantity);
+                                }
+                            });
 
                             Notification::make()
                                 ->title('Batches marked as expired')
@@ -133,7 +162,7 @@ class ProductBatchResource extends Resource
         ];
     }
 
-    public static function canAccess() :bool
+    public static function canAccess(): bool
     {
         return Auth::user()->role === 'cashier';
     }

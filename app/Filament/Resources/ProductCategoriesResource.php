@@ -115,7 +115,7 @@ class ProductCategoriesResource extends Resource
 
     public static function canAccess() :bool
     {
-        return Auth::user()->role === 'admin';
+        return false;
     }
 
     public static function canCreate(): bool
